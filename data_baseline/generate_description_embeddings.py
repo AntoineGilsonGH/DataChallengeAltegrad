@@ -359,14 +359,10 @@ def main():
         if POST_PROCESSING != 'none':
             embeddings_array = post_process_embeddings(embeddings_array, method=POST_PROCESSING)
         
-        # Create output filename with configuration
+        
         config_str = f"{MODEL_NAME}_{POOLING_STRATEGY}_{POST_PROCESSING}"
         if SAVE_FORMAT == 'csv':
             output_path = os.path.join(BASE, f'{split}_embeddings_{config_str}.csv')
-        elif SAVE_FORMAT == 'npy':
-            output_path = os.path.join(BASE, f'{split}_embeddings_{config_str}.npz')
-        else:
-            output_path = os.path.join(BASE, f'{split}_embeddings_{config_str}.pkl')
         
         # Save embeddings
         save_embeddings(ids, list(embeddings_array), output_path, save_format=SAVE_FORMAT)
@@ -443,7 +439,7 @@ def benchmark_strategies():
                     'avg_norm': avg_norm,
                     'dimension': len(embeddings[0])
                 }
-                print(f"    Avg time: {avg_time:.4f}s, Avg norm: {avg_norm:.4f}, Dim: {len(embeddings[0])}")
+                print(f"Avg time: {avg_time:.4f}s, Avg norm: {avg_norm:.4f}, Dim: {len(embeddings[0])}")
     
     # Save benchmark results
     benchmark_path = os.path.join(BASE, 'embedding_benchmark_results.json')

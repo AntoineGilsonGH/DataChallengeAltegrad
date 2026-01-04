@@ -27,12 +27,12 @@ TRAIN_GRAPHS = os.path.join(BASE, "train_graphs.pkl")
 VAL_GRAPHS   = os.path.join(BASE, "validation_graphs.pkl")
 TEST_GRAPHS  = os.path.join(BASE, "test_graphs.pkl")
 
-TRAIN_EMB_CSV = os.path.join(BASE, "train_embeddings_mpnet_mean_normalize.csv")
-VAL_EMB_CSV   = os.path.join(BASE, "validation_embeddings_mpnet_mean_normalize.csv")
+TRAIN_EMB_CSV = os.path.join(BASE, "train_embeddings_scibert_mean_normalize.csv")
+VAL_EMB_CSV   = os.path.join(BASE, "validation_embeddings_scibert_mean_normalize.csv")
 
 # Training parameters
 BATCH_SIZE = 32
-EPOCHS = 25
+EPOCHS = 30
 LR = 5e-4
 WEIGHT_DECAY = 1e-5
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -477,7 +477,7 @@ def main():
         else:
             print(f"Epoch {ep+1}/{EPOCHS} - loss={train_loss:.4f}")
 
-    model_path = "model_output.pt"
+    model_path = f"model_{ARCH}_{POOL}_{JK_MODE}_output.pt"
     checkpoint = {
                     'model_state_dict': mol_enc.state_dict(),
                     'config': {
