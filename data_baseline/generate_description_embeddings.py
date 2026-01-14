@@ -12,6 +12,7 @@ from tqdm import tqdm
 from typing import Dict, List, Optional, Union
 import warnings
 import json
+import time
 warnings.filterwarnings('ignore')
 
 
@@ -30,6 +31,7 @@ MODEL_CHOICES = {
     'distilbert': 'distilbert-base-uncased',  
 }
 
+# Custom JSON encoder to handle numpy types
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -40,6 +42,8 @@ class NumpyEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return super().default(obj)
+
+# Embedding generator class
 
 class EnhancedBertEmbeddings:
     """Enhanced BERT embedding generator with multiple pooling strategies."""
@@ -141,7 +145,6 @@ class EnhancedBertEmbeddings:
             # Expand attention mask for broadcasting
             input_mask_expanded = attention_mask.unsqueeze(-1).expand(last_hidden_state.size()).float()
             
-            # Sum embeddings along sequence dimension
             sum_embeddings = torch.sum(last_hidden_state * input_mask_expanded, dim=1)
             sum_mask = torch.clamp(input_mask_expanded.sum(dim=1), min=1e-9)
             
@@ -164,10 +167,9 @@ class EnhancedBertEmbeddings:
         
         # Weighted pooling using attention weights
         if pooling_strategy in ['weighted', 'all'] and hasattr(outputs, 'attentions') and outputs.attentions:
-            # Use attention from last layer, average over heads
-            last_layer_attention = outputs.attentions[-1].mean(dim=1)  # [batch, seq_len, seq_len]
+            last_layer_attention = outputs.attentions[-1].mean(dim=1)  
             # Use CLS token attention to all other tokens
-            cls_attention = last_layer_attention[:, 0, :].unsqueeze(-1)  # [batch, seq_len, 1]
+            cls_attention = last_layer_attention[:, 0, :].unsqueeze(-1)  
             
             weighted_embeddings = torch.sum(last_hidden_state * cls_attention, dim=1)
             if normalize:
@@ -189,7 +191,6 @@ class EnhancedBertEmbeddings:
             
             # Concatenate and reduce
             hierarchical_concat = torch.cat(hierarchical_embeddings, dim=-1)
-            # Optional: add a learned projection here if needed
             if normalize:
                 hierarchical_concat = torch.nn.functional.normalize(hierarchical_concat, p=2, dim=-1)
             embeddings['hierarchical'] = hierarchical_concat.cpu().numpy().flatten()
@@ -271,9 +272,9 @@ def main():
     """Main function to generate embeddings for train and validation sets."""
     
     # Configuration
-    MODEL_NAME = 'scibert'  # Options: bert_base, scibert, biobert, mpnet, deberta, distilbert
-    POOLING_STRATEGY = 'mean'  # Options: cls, mean, max, weighted, hierarchical, all
-    POST_PROCESSING = 'normalize'  # Options: none, normalize, whiten, pca
+    MODEL_NAME = 'scibert'  
+    POOLING_STRATEGY = 'mean'  
+    POST_PROCESSING = 'normalize' 
     SAVE_FORMAT = 'csv' 
     
     # Initialize embedding generator
@@ -321,9 +322,9 @@ def main():
                         dummy_embedding = np.zeros(embedder.model.config.hidden_size, dtype=np.float32)
                     embeddings = {'mean': dummy_embedding}
                 else:
-                    # Get embedding
+        
                     if POOLING_STRATEGY == 'all':
-                        # Get all strategies
+                     
                         embeddings_dict = embedder.get_bert_embedding(
                             description, 
                             pooling_strategy='all',
@@ -373,7 +374,6 @@ def main():
         print(f"  Mean norm: {np.mean(np.linalg.norm(embeddings_array, axis=1)):.4f}")
         print(f"  Std norm: {np.std(np.linalg.norm(embeddings_array, axis=1)):.4f}")
         
-        # Save additional metadata
         metadata = {
             'split': split,
             'model': MODEL_NAME,

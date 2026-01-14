@@ -32,10 +32,7 @@ TEST_GRAPHS  = os.path.join(BASE, "test_graphs.pkl")
 TRAIN_EMB_CSV = os.path.join("/home/onyxia/work/DataChallengeAltegrad/data_baseline/train_embeddings_ensemble_chimberta_gte_large.csv")
 VAL_EMB_CSV   = os.path.join("home/onyxia/work/DataChallengeAltegrad/data_baseline/validation_embeddings_ensemble_chimberta_gte_large.csv")
 
-
-# =========================================================
-# CONFIGURATION
-# # =========================================================
+# Configuration 
 
 # Training parameters
 BATCH_SIZE = 32
@@ -51,13 +48,11 @@ DROPOUT = 0.1
 USE_EDGE_FEATURES = True
 
 # Architecture possibilites (simple knobs)
-ARCH = "gine"          # "gine" or "transformer"
-POOL = "multipool"     # "multipool" | "attn" | "set2set"
-JK_MODE = "last"       # "last" | "cat" | "max"   
+ARCH = "gine"          
+POOL = "multipool"    
+JK_MODE = "last"      
 
-# =========================================================
-# MODELLING
-# =========================================================
+# Modelling components
 
 class ResidualMLP(nn.Module):
     """Cheap stabilizer for the projection head."""
@@ -82,15 +77,15 @@ class AtomFeatureEncoder(nn.Module):
     def __init__(self, hidden: int):
         super().__init__()
         self.embeds = nn.ModuleList([
-            nn.Embedding(119, hidden),  # atomic_num
-            nn.Embedding(10, hidden),   # chirality
-            nn.Embedding(11, hidden),   # degree
-            nn.Embedding(12, hidden),   # formal_charge
-            nn.Embedding(9, hidden),    # num_hs
-            nn.Embedding(5, hidden),    # num_radical_electrons
-            nn.Embedding(8, hidden),    # hybridization
-            nn.Embedding(2, hidden),    # is_aromatic
-            nn.Embedding(2, hidden),    # is_in_ring
+            nn.Embedding(119, hidden),  
+            nn.Embedding(10, hidden),   
+            nn.Embedding(11, hidden),   
+            nn.Embedding(12, hidden),   
+            nn.Embedding(9, hidden),    
+            nn.Embedding(5, hidden),    
+            nn.Embedding(8, hidden),   
+            nn.Embedding(2, hidden),  
+            nn.Embedding(2, hidden),    
         ])
         self.proj = nn.Linear(hidden * len(self.embeds), hidden)
 
@@ -106,9 +101,9 @@ class BondFeatureEncoder(nn.Module):
     def __init__(self, hidden: int):
         super().__init__()
         self.embeds = nn.ModuleList([
-            nn.Embedding(23, hidden),  # bond_type
-            nn.Embedding(7, hidden),   # stereo
-            nn.Embedding(2, hidden),   # is_conjugated
+            nn.Embedding(23, hidden),  
+            nn.Embedding(7, hidden),  
+            nn.Embedding(2, hidden),   
         ])
         self.proj = nn.Linear(hidden * len(self.embeds), hidden)
 
@@ -116,9 +111,8 @@ class BondFeatureEncoder(nn.Module):
         parts = [emb(e_cat[:, i]) for i, emb in enumerate(self.embeds)]
         return self.proj(torch.cat(parts, dim=-1))
 
-# =========================================================
-# SEVERAL POOLING OPTIONS (Multipool / Attention / Set2Set)
-# =========================================================
+# Pooling options 
+
 class MultiPool(nn.Module):
     """Mean + Max + Add pooling with small post-layer."""
     def __init__(self, hidden: int, dropout: float = 0.1):
@@ -166,9 +160,7 @@ class Set2SetPool(nn.Module):
         return self.pool(h, batch_vec)
 
 
-# =========================================================
-# NEW ENCODER TO REPLACE THE OLD GCN
-# =========================================================
+# New encoder model
 
 class ImprovedMolGNN(nn.Module):
 
@@ -285,9 +277,8 @@ class ImprovedMolGNN(nn.Module):
         return F.normalize(out, dim=-1)
 
 
-# =========================================================
-# LOSS 
-# =========================================================
+# LOos s function
+
 class ImprovedContrastiveLoss(nn.Module):
     """
     We create a new contrastive loss to replace the old MSE, it is better suited in our case.
@@ -309,9 +300,8 @@ class ImprovedContrastiveLoss(nn.Module):
         return 0.5 * (loss_m2t + loss_t2m)
 
 
-# =========================================================
-# Training / Eval 
-# =========================================================
+# Training and evaluation 
+
 def train_epoch(mol_enc, loader, optimizer, criterion, device, scheduler=None):
     mol_enc.train()
     total_loss, total = 0.0, 0
