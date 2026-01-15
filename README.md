@@ -32,7 +32,7 @@ Check the structure and contents of your graph files:
 python inspect_graph_data.py
 ```
 
-### 2. Generate Description Embeddings
+### 2. Generate Description Embeddings with a GTE model
 
 Create embeddings for molecular descriptions:
 
@@ -51,7 +51,7 @@ Main updates compared to the baseline:
 - L2 normalization of embeddings for stable cosine similarity
 - Robust handling of empty or malformed descriptions
 
-### 3. Train GCN Model
+### 3. Train à GINE-Conv Model
 
 Train the graph neural network:
 
@@ -69,7 +69,7 @@ Main updates compared to the baseline:
 
 This creates a model `model_{ARCH}_{POOL}_{JK_MODE}_output.pt`.
 
-### 4. Run Retrieval
+### 4. Run a top-k weighted Retrieval System
 
 Retrieve descriptions for test molecules:
 
